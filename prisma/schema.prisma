@@ -1,0 +1,97 @@
+// prisma/schema.prisma
+
+// 1. Konfigurasi Client
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 2. Konfigurasi Database (MySQL)
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================
+// MODEL DATA (TABEL)
+// ===========================================
+
+// 1. Tabel Admin (Untuk Login Pengelola)
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // Password akan disimpan (sebaiknya di-hash nanti)
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 2. Tabel Kategori (Pengelompokan Produk)
+model Kategori {
+  id        Int      @id @default(autoincrement())
+  nama      String   @unique
+  produk    Produk[] // Relasi: Satu kategori punya banyak produk
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 3. Tabel Produk (Katalog Barang)
+model Produk {
+  id          Int      @id @default(autoincrement())
+  nama        String
+  harga       Float
+  stok        Int
+  deskripsi   String?  @db.Text // Menggunakan tipe Text agar muat banyak karakter
+  gambar      String?  // Menyimpan nama file gambar (bukan filenya langsung)
+  
+  // Relasi ke Kategori
+  kategoriId  Int
+  kategori    Kategori @relation(fields: [kategoriId], references: [id])
+
+  // Relasi ke Transaksi (Opsional, untuk pencatatan penjualan manual admin)
+  transaksiItems TransaksiItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 4. Tabel Testimoni (Ulasan Pelanggan)
+model Testimoni {
+  id        Int      @id @default(autoincrement())
+  name      String
+  text      String   @db.Text
+  rating    Int
+  status    String   @default("Pending") // 'Pending', 'Published', 'Hidden'
+  date      DateTime @default(now())
+}
+
+// 5. Tabel Transaksi (Untuk Laporan Penjualan Manual Admin)
+model Transaksi {
+  id          Int             @id @default(autoincrement())
+  tanggal     DateTime        @default(now())
+  status      String          @default("Selesai") // 'Selesai', 'Pending', 'Batal'
+  totalHarga  Float
+  
+  items       TransaksiItem[]
+}
+
+// Tabel Pivot (Penghubung) Transaksi & Produk
+model TransaksiItem {
+  id          Int       @id @default(autoincrement())
+  
+  transaksiId Int
+  transaksi   Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
+  
+  produkId    Int
+  produk      Produk    @relation(fields: [produkId], references: [id])
+  
+  jumlah      Int
+  hargaSatuan Float     // Harga saat transaksi terjadi
+}
+
+// 6. Tabel Konten Statis (Info Website)
+model KontenWebsite {
+  id          Int     @id @default(autoincrement())
+  key         String  @unique // Contoh: 'whatsapp', 'alamat'
+  value       String  @db.Text
+  label       String?
+}
