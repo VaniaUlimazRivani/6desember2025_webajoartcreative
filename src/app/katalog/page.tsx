@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Search, Filter, ArrowRight, ChevronDown, Star } from 'lucide-react';
 import { productsData } from '@/lib/data';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/ui/Navbar';
 
 export default function Katalog() {
   const [filter, setFilter] = useState('Semua');

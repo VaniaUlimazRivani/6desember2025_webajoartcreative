@@ -1,6 +1,6 @@
 'use client';
 import { MapPin, Phone, Instagram, Clock, ArrowRight } from 'lucide-react';
-import Navbar from '@/components/Navbar';
+import Navbar from '@/components/ui/Navbar';
 
 export default function Kontak() {
   return (

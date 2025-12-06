@@ -1,7 +1,7 @@
 // app/page.tsx
 import Link from "next/link";
 import { ArrowRight, Flame, Star, ShoppingBag } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/ui/Navbar";
 import { keunggulan, productsData, testimonials } from "@/lib/data";
 
 export default function Home() {
