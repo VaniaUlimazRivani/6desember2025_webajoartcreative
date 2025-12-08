@@ -1,20 +1,60 @@
 'use client';
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, ArrowRight, ChevronDown, Star } from 'lucide-react';
-import { productsData } from '@/lib/data';
+import { Search, Filter, ArrowRight, Star } from 'lucide-react';
 import Navbar from '@/components/ui/Navbar';
 
+// 1. Definisikan tipe data sesuai dengan Database Prisma Anda
+interface Product {
+  id: number;
+  nama: string;
+  harga: number;
+  gambar: string | null;
+  kategori: {
+    nama: string;
+  };
+  // Karena di database belum ada rating, kita buat opsional atau default
+  rating?: number; 
+}
+
 export default function Katalog() {
+  // 2. State untuk menampung data dari API
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [filter, setFilter] = useState('Semua');
   const [search, setSearch] = useState('');
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
+  // 3. Ambil data dari API Database saat halaman dibuka
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch('/api/produk');
+        if (!res.ok) throw new Error('Gagal mengambil data');
+        const data = await res.json();
+        setProducts(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  // Daftar kategori (Bisa dibuat dinamis juga nanti, tapi manual dulu oke)
   const categories = ['Semua', 'Lampu Hias', 'Jam Dinding', 'Desain Interior', 'Tas', 'Bangku & Sofa'];
 
-  const filteredProducts = productsData.filter(p => {
-    const matchCategory = filter === 'Semua' || p.category === filter;
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
+  // 4. Logic Filter (Disesuaikan dengan field database: 'nama', 'kategori.nama')
+  const filteredProducts = products.filter(p => {
+    // Cek kategori (handle jika kategori null)
+    const categoryName = p.kategori?.nama || 'Uncategorized';
+    const matchCategory = filter === 'Semua' || categoryName === filter;
+    
+    // Cek search (handle nama produk)
+    const matchSearch = p.nama.toLowerCase().includes(search.toLowerCase());
+    
     return matchCategory && matchSearch;
   });
 
@@ -65,43 +105,70 @@ export default function Katalog() {
               <Search className="absolute left-5 top-4.5 text-gray-400" size={24} />
             </div>
 
-            {/* Product Grid */}
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map(product => (
-                  <div 
-                    key={product.id} 
-                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300 border border-[#E6D5B8] group relative"
-                  >
-                    <Link href={`/produk/${product.id}`} className="block">
-                      <div className="aspect-square overflow-hidden bg-gray-100 relative cursor-pointer">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-end">
-                          <span className="text-white text-sm font-bold flex items-center gap-1">Lihat Detail <ArrowRight size={16}/></span>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="p-5">
-                      <div className="text-xs font-bold uppercase tracking-wider mb-2 text-[#C87941]">{product.category}</div>
-                      <Link href={`/produk/${product.id}`}>
-                        <h3 className="font-bold text-lg mb-2 line-clamp-1 hover:text-[#C87941] transition cursor-pointer text-[#4A403A]">{product.name}</h3>
-                      </Link>
-                      <div className="flex justify-between items-center">
-                        <p className="font-bold text-xl text-[#4A403A]">
-                          Rp {product.price.toLocaleString('id-ID')}
-                        </p>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                           <Star size={12} fill="#fbbf24" stroke="none" /> {product.rating}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            {/* Loading State */}
+            {loading ? (
+                <div className="text-center py-20">
+                    <p className="text-gray-500 text-lg animate-pulse">Sedang memuat produk dari database...</p>
+                </div>
             ) : (
-              <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
-                <p className="text-xl text-gray-500 font-medium">Produk tidak ditemukan.</p>
-              </div>
+                <>
+                {/* Product Grid */}
+                {filteredProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredProducts.map(product => (
+                    <div 
+                        key={product.id} 
+                        className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition duration-300 border border-[#E6D5B8] group relative"
+                    >
+                        {/* Link ke Detail Produk */}
+                        {/* Perhatikan: href menggunakan ID database */}
+                        <Link href={`/katalog/${product.id}`} className="block">
+                        <div className="aspect-square overflow-hidden bg-gray-100 relative cursor-pointer">
+                            <img 
+                                // Ganti 'image' jadi 'gambar'. Jika null pakai placeholder
+                                src={product.gambar || 'https://via.placeholder.com/300?text=No+Image'} 
+                                alt={product.nama} 
+                                className="w-full h-full object-cover group-hover:scale-105 transition duration-500" 
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 opacity-0 group-hover:opacity-100 transition duration-300 flex justify-end">
+                            <span className="text-white text-sm font-bold flex items-center gap-1">Lihat Detail <ArrowRight size={16}/></span>
+                            </div>
+                        </div>
+                        </Link>
+                        
+                        <div className="p-5">
+                        <div className="text-xs font-bold uppercase tracking-wider mb-2 text-[#C87941]">
+                            {/* Ganti 'category' jadi 'kategori.nama' */}
+                            {product.kategori?.nama || 'Umum'}
+                        </div>
+                        
+                        <Link href={`/katalog/${product.id}`}>
+                            {/* Ganti 'name' jadi 'nama' */}
+                            <h3 className="font-bold text-lg mb-2 line-clamp-1 hover:text-[#C87941] transition cursor-pointer text-[#4A403A]">
+                                {product.nama}
+                            </h3>
+                        </Link>
+                        
+                        <div className="flex justify-between items-center">
+                            <p className="font-bold text-xl text-[#4A403A]">
+                            {/* Ganti 'price' jadi 'harga' */}
+                            Rp {product.harga.toLocaleString('id-ID')}
+                            </p>
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                                {/* Rating dummy statis karena belum ada di DB */}
+                                <Star size={12} fill="#fbbf24" stroke="none" /> {product.rating || 5.0}
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                ) : (
+                <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
+                    <p className="text-xl text-gray-500 font-medium">Produk tidak ditemukan.</p>
+                </div>
+                )}
+                </>
             )}
           </div>
         </div>

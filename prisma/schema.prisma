@@ -1,97 +1,85 @@
 // prisma/schema.prisma
 
-// 1. Konfigurasi Client
 generator client {
   provider = "prisma-client-js"
 }
 
-// 2. Konfigurasi Database (MySQL)
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
 }
 
-// ===========================================
-// MODEL DATA (TABEL)
-// ===========================================
-
-// 1. Tabel Admin (Untuk Login Pengelola)
+// Tabel Admin
 model Admin {
   id        Int      @id @default(autoincrement())
   username  String   @unique
-  password  String   // Password akan disimpan (sebaiknya di-hash nanti)
+  password  String
   email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// 2. Tabel Kategori (Pengelompokan Produk)
+// Tabel Kategori
 model Kategori {
   id        Int      @id @default(autoincrement())
   nama      String   @unique
-  produk    Produk[] // Relasi: Satu kategori punya banyak produk
+  produk    Produk[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// 3. Tabel Produk (Katalog Barang)
+// Tabel Produk
 model Produk {
-  id          Int      @id @default(autoincrement())
-  nama        String
-  harga       Float
-  stok        Int
-  deskripsi   String?  @db.Text // Menggunakan tipe Text agar muat banyak karakter
-  gambar      String?  // Menyimpan nama file gambar (bukan filenya langsung)
-  
-  // Relasi ke Kategori
-  kategoriId  Int
-  kategori    Kategori @relation(fields: [kategoriId], references: [id])
-
-  // Relasi ke Transaksi (Opsional, untuk pencatatan penjualan manual admin)
-  transaksiItems TransaksiItem[]
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            Int             @id @default(autoincrement())
+  nama          String
+  harga         Float
+  stok          Int             // Wajib diisi saat POST
+  deskripsi     String?         @db.Text
+  gambar        String?
+  kategoriId    Int             // Wajib, harus ada ID kategori yang valid
+  kategori      Kategori        @relation(fields: [kategoriId], references: [id])
+  transaksiItems  TransaksiItem[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
-// 4. Tabel Testimoni (Ulasan Pelanggan)
+// Tabel Testimoni
 model Testimoni {
   id        Int      @id @default(autoincrement())
   name      String
   text      String   @db.Text
   rating    Int
-  status    String   @default("Pending") // 'Pending', 'Published', 'Hidden'
+  status    String   @default("Pending")
   date      DateTime @default(now())
 }
 
-// 5. Tabel Transaksi (Untuk Laporan Penjualan Manual Admin)
+// Tabel Transaksi
 model Transaksi {
   id          Int             @id @default(autoincrement())
   tanggal     DateTime        @default(now())
-  status      String          @default("Selesai") // 'Selesai', 'Pending', 'Batal'
+  status      String          @default("Selesai")
   totalHarga  Float
-  
   items       TransaksiItem[]
 }
 
-// Tabel Pivot (Penghubung) Transaksi & Produk
+// Pivot Transaksi Items
 model TransaksiItem {
   id          Int       @id @default(autoincrement())
-  
+
   transaksiId Int
   transaksi   Transaksi @relation(fields: [transaksiId], references: [id], onDelete: Cascade)
-  
+
   produkId    Int
   produk      Produk    @relation(fields: [produkId], references: [id])
-  
+
   jumlah      Int
-  hargaSatuan Float     // Harga saat transaksi terjadi
+  hargaSatuan Float
 }
 
-// 6. Tabel Konten Statis (Info Website)
+// Konten Website
 model KontenWebsite {
-  id          Int     @id @default(autoincrement())
-  key         String  @unique // Contoh: 'whatsapp', 'alamat'
-  value       String  @db.Text
-  label       String?
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String @db.Text
+  label String?
 }

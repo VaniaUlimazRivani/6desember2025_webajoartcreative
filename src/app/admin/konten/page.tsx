@@ -1,123 +1,166 @@
 'use client';
-import { useState } from 'react';
-import { Save, Edit, Phone, Mail, MapPin, Instagram } from 'lucide-react';
 
-// Interface Data Konten
-interface StaticContent {
-  about: string;
-  address: string;
-  phone: string;
-  email: string;
-  instagram: string;
-}
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Save, Layout, Info, Phone, Loader2 } from 'lucide-react';
 
-// Data Awal
-const initialContent: StaticContent = {
-  about: "Ajo Art Creative adalah UMKM yang berfokus pada pengolahan limbah pipa paralon menjadi karya seni bernilai tinggi.",
-  address: "Komplek Asratek, Jl. Pontianak No.2 Blok J, Ulak Karang Sel., Kec. Padang Utara, Kota Padang",
-  phone: "0812-3600-7061",
-  email: "halo@ajoartcreative.com",
-  instagram: "@ajoart_creative"
-};
+export default function KontenWebPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-export default function ContentPage() {
-  const [content, setContent] = useState<StaticContent>(initialContent);
+  // State Default (Nilai awal kosong)
+  const [formData, setFormData] = useState({
+    hero_judul: '',
+    hero_deskripsi: '',
+    tentang_kami: '',
+    kontak_wa: '',
+    kontak_alamat: '',
+    kontak_email: '',
+    sosmed_ig: ''
+  });
 
-  const handleChange = (key: keyof StaticContent, value: string) => {
-    setContent({ ...content, [key]: value });
+  // --- 1. AMBIL DATA SAAT HALAMAN DIBUKA ---
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/konten');
+        if (res.ok) {
+          const data = await res.json();
+          // Gabungkan data DB dengan default state agar tidak error
+          setFormData(prev => ({ ...prev, ...data }));
+        }
+      } catch (error) {
+        console.error("Gagal ambil konten", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // --- 2. HANDLE KETIK ---
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // Di sini nanti logika API call ke backend
-    alert('Perubahan konten berhasil disimpan!');
+  // --- 3. SIMPAN DATA ---
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+
+    try {
+      const res = await fetch('/api/konten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        alert('✅ Pengaturan berhasil disimpan!');
+      } else {
+        const err = await res.json();
+        alert('❌ Gagal: ' + err.message);
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan sistem.');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+        <div className="min-h-screen bg-[#FDFCF5] flex items-center justify-center">
+            <Loader2 className="animate-spin text-[#C87941] mr-2" />
+            <span className="text-gray-500">Memuat pengaturan...</span>
+        </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-[#E6D5B8]">
-        <div>
-          <h2 className="text-2xl font-bold text-[#4A403A] flex items-center gap-2 font-serif">
-            <Edit size={24} className="text-[#C87941]"/> Konten Website
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">Edit informasi kontak dan deskripsi website secara instan.</p>
-        </div>
-        <button 
-          onClick={handleSave}
-          className="bg-[#C87941] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#b06a38] shadow-lg transition transform hover:-translate-y-0.5"
-        >
-          <Save size={18} /> Simpan Perubahan
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Card Informasi Dasar */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#E6D5B8]">
-          <h3 className="font-bold mb-6 text-lg border-b border-gray-100 pb-4 text-[#4A403A]">Informasi Dasar</h3>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Tentang Kami (Footer)</label>
-              <textarea 
-                rows={5}
-                className="w-full p-4 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#C87941] focus:border-transparent transition text-sm leading-relaxed"
-                value={content.about}
-                onChange={(e) => handleChange('about', e.target.value)}
-              ></textarea>
-              <p className="text-xs text-gray-400 mt-2">Teks ini muncul di bagian bawah setiap halaman.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Alamat Lengkap</label>
-              <textarea 
-                rows={3}
-                className="w-full p-4 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#C87941] focus:border-transparent transition text-sm"
-                value={content.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-              ></textarea>
-            </div>
+    <div className="min-h-screen bg-[#FDFCF5] font-sans p-8 animate-fade-in pb-24">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Link href="/admin/dashboard" className="p-2 rounded-full bg-white border border-[#E6D5B8] text-gray-500 hover:text-[#C87941] transition">
+             <ArrowLeft size={20} />
+          </Link>
+          <div>
+             <h1 className="text-3xl font-serif font-bold text-[#4A403A]">Konten Website</h1>
+             <p className="text-gray-500">Ubah teks halaman depan tanpa coding.</p>
           </div>
         </div>
 
-        {/* Card Kontak */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#E6D5B8]">
-          <h3 className="font-bold mb-6 text-lg border-b border-gray-100 pb-4 text-[#4A403A]">Kontak & Sosmed</h3>
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Nomor WhatsApp</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#C87941] focus:border-transparent transition"
-                  value={content.phone}
-                  onChange={(e) => handleChange('phone', e.target.value)}
-                />
-                <div className="absolute left-4 top-3.5 text-gray-400"><Phone size={18} /></div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Email Bisnis</label>
-              <div className="relative">
-                <input 
-                  type="email" 
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#C87941] focus:border-transparent transition"
-                  value={content.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
-                />
-                <div className="absolute left-4 top-3.5 text-gray-400"><Mail size={18} /></div>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Username Instagram</label>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-[#C87941] focus:border-transparent transition"
-                  value={content.instagram}
-                  onChange={(e) => handleChange('instagram', e.target.value)}
-                />
-                <div className="absolute left-4 top-3.5 text-gray-400"><Instagram size={18} /></div>
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          
+          {/* Form Hero */}
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#E6D5B8]">
+            <h3 className="font-bold text-lg text-[#4A403A] mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
+                <Layout size={20} className="text-[#C87941]" /> Halaman Depan (Hero)
+            </h3>
+            <div className="space-y-5">
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Judul Utama</label>
+                    <input type="text" name="hero_judul" value={formData.hero_judul} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="Judul besar di halaman depan" />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Deskripsi Singkat</label>
+                    <textarea name="hero_deskripsi" rows={3} value={formData.hero_deskripsi} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="Teks kecil di bawah judul" />
+                </div>
             </div>
           </div>
-        </div>
+
+          {/* Form Tentang Kami */}
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#E6D5B8]">
+            <h3 className="font-bold text-lg text-[#4A403A] mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
+                <Info size={20} className="text-[#C87941]" /> Tentang Kami
+            </h3>
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Profil Singkat</label>
+                <textarea name="tentang_kami" rows={5} value={formData.tentang_kami} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="Cerita singkat tentang toko Anda..." />
+            </div>
+          </div>
+
+          {/* Form Kontak */}
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-[#E6D5B8]">
+            <h3 className="font-bold text-lg text-[#4A403A] mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
+                <Phone size={20} className="text-[#C87941]" /> Kontak
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">WhatsApp</label>
+                    <input type="text" name="kontak_wa" value={formData.kontak_wa} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="62812..." />
+                </div>
+                <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                    <input type="email" name="kontak_email" value={formData.kontak_email} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="admin@ajoart.com" />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Alamat</label>
+                    <textarea name="kontak_alamat" rows={2} value={formData.kontak_alamat} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="Alamat lengkap toko..." />
+                </div>
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Instagram Link</label>
+                    <input type="text" name="sosmed_ig" value={formData.sosmed_ig} onChange={handleChange} className="w-full p-3 border border-gray-300 rounded-xl focus:ring-[#C87941] outline-none" placeholder="https://instagram.com/..." />
+                </div>
+            </div>
+          </div>
+
+          {/* Tombol Simpan Melayang */}
+          <div className="fixed bottom-8 right-8 z-50">
+            <button 
+                type="submit" 
+                disabled={isSaving}
+                className="bg-[#4A403A] text-white px-8 py-4 rounded-full font-bold shadow-2xl hover:bg-[#2d2723] hover:scale-105 transition transform flex items-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed border-2 border-[#C87941]"
+            >
+                {isSaving ? <Loader2 className="animate-spin" /> : <Save size={24} />}
+                {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </button>
+          </div>
+
+        </form>
       </div>
     </div>
   );
