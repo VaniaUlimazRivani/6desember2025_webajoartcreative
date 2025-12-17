@@ -40,11 +40,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     setMobileSidebar(false);
   }, [pathname]);
 
-  const handleLogout = () => {
-    if (confirm('Yakin ingin keluar dari panel admin?')) {
-      localStorage.removeItem('isLoggedIn');
-      router.replace('/login');
+  const handleLogout = async () => {
+    if (!confirm('Yakin ingin keluar dari panel admin?')) return;
+
+    try {
+      // Panggil API logout untuk menghapus cookie token di server
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (err) {
+      console.error('Error saat logout:', err);
     }
+
+    // Hapus indikator local dan arahkan ke halaman login
+    localStorage.removeItem('isLoggedIn');
+    router.replace('/login');
   };
 
   const menuItems = [

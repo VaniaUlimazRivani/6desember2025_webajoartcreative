@@ -23,7 +23,7 @@ export default function KontenWebPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/konten');
+        const res = await fetch('/api/konten', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           // Gabungkan data DB dengan default state agar tidak error
@@ -52,6 +52,7 @@ export default function KontenWebPage() {
     try {
       const res = await fetch('/api/konten', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });

@@ -1,3 +1,4 @@
+// ...existing code...
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -5,11 +6,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { User, Lock, Flame, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
 
+// ...existing code...
 export default function LoginPage() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false); // Tambahkan state loading
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: FormEvent) => {
@@ -18,21 +20,27 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Panggil API Login Backend yang sudah kita buat
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // <- penting agar browser menyimpan cookie dari server
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await res.json();
+      // parsing response dengan aman (jika bukan JSON, ambil teks)
+      let data: any = {};
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const txt = await res.text();
+        data = { message: txt || (res.ok ? 'OK' : 'Unexpected response') };
+      }
 
       if (res.ok) {
-        // Jika sukses, backend sudah set Cookie secara otomatis.
-        // Kita tinggal redirect ke dashboard.
+        // cookie sudah dikirim server -> redirect ke dashboard
         router.push('/admin/dashboard');
       } else {
-        // Tampilkan pesan error dari backend (misal: "Password salah")
         setError(data.message || 'Login gagal. Silakan coba lagi.');
       }
     } catch (err) {
@@ -107,7 +115,7 @@ export default function LoginPage() {
             className="w-full py-3.5 rounded-xl font-bold text-white bg-[#C87941] hover:bg-[#b06a38] transition transform active:scale-95 shadow-lg shadow-[#C87941]/30 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-                <> <Loader2 className="animate-spin" /> Memproses... </>
+                <> <Loader2 className="animate-spin" /> Memproses... </> 
             ) : (
                 'Masuk Dashboard'
             )}
@@ -117,3 +125,4 @@ export default function LoginPage() {
     </div>
   );
 }
+// ...existing code...

@@ -46,6 +46,19 @@ export default function LaporanPage() {
     window.print();
   };
 
+  // Tambahan CSS khusus untuk mencetak: buat tabel lebih formal dan tegas
+  const PrintStyles = () => (
+    <style>{`@media print {
+        body { -webkit-print-color-adjust: exact; color-adjust: exact; }
+        .print-table, .print-table th, .print-table td { border: 1px solid #000 !important; }
+        .print-table { border-collapse: collapse !important; width: 100% !important; }
+        .print-hidden { display: none !important; }
+        .print-page-break { page-break-after: always; }
+        .no-print-radius { border-radius: 0 !important; }
+        table { font-size: 12pt; }
+      }`}</style>
+  );
+
   if (isLoading) return <div className="p-10 text-center text-gray-500">Menghitung aset...</div>;
   if (!data) return <div className="p-10 text-center text-red-500">Gagal memuat laporan.</div>;
 
@@ -130,7 +143,7 @@ export default function LaporanPage() {
                 <h3 className="font-bold text-red-700 mb-4 flex items-center gap-2">
                     <AlertTriangle size={18}/> Barang Stok Menipis (Segera Produksi)
                 </h3>
-                <table className="w-full text-sm text-left">
+                <table className="w-full text-sm text-left print-table">
                     <thead className="text-gray-500 border-b border-red-200">
                         <tr>
                             <th className="pb-2">Nama Produk</th>
@@ -158,7 +171,7 @@ export default function LaporanPage() {
                     <FileText size={20} /> Rincian Nilai Aset per Produk
                 </h3>
             </div>
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm print-table">
                 <thead className="bg-gray-50 text-gray-600 font-bold uppercase border-b border-gray-200">
                     <tr>
                         <th className="p-4">Produk</th>
@@ -194,6 +207,9 @@ export default function LaporanPage() {
         <div className="hidden print:block mt-10 text-center text-xs text-gray-400">
             <p>Dokumen ini dicetak otomatis dari sistem Admin Panel Ajo Art.</p>
         </div>
+
+        {/* Inject print styles */}
+        <PrintStyles />
 
       </div>
     </div>
