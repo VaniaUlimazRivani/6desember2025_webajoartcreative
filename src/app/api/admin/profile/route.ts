@@ -1,6 +1,6 @@
-// src/app/api/admin/profile/route.ts
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
 
 // GET: Ambil data Admin (ID 1)
 export async function GET() {
@@ -22,7 +22,7 @@ export async function GET() {
   }
 }
 
-// PATCH: Update data Admin
+// PATCH: Update data Admin dengan Hash Password
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
@@ -34,9 +34,10 @@ export async function PATCH(request: Request) {
       email,
     };
 
-    // Hanya update password jika diisi (tidak kosong)
+    // PERBAIKAN: Hash password sebelum disimpan
     if (password && password.length > 0) {
-      dataToUpdate.password = password;
+      const hashedPassword = await bcrypt.hash(password, 10);
+      dataToUpdate.password = hashedPassword; // ✅ Disimpan terenkripsi
     }
 
     // Cari admin pertama untuk mendapatkan ID-nya
@@ -52,16 +53,24 @@ export async function PATCH(request: Request) {
       });
     } else {
       // CREATE: Jika admin belum ada, buat baru (Default ID 1)
+      const defaultHash = await bcrypt.hash(password || 'admin123', 10);
       updatedAdmin = await prisma.admin.create({
         data: {
           username: username || 'admin',
           email: email || 'admin@ajoart.com',
-          password: password || 'admin123', // Password default jika baru dibuat
+          password: defaultHash,
         }
       });
     }
 
-    return NextResponse.json({ message: "Profil berhasil diperbarui", admin: updatedAdmin }, { status: 200 });
+    return NextResponse.json({ 
+      message: "✅ Profil berhasil diperbarui", 
+      admin: {
+        id: updatedAdmin.id,
+        username: updatedAdmin.username,
+        email: updatedAdmin.email
+      }
+    }, { status: 200 });
 
   } catch (error: any) {
     return NextResponse.json({ message: "Gagal update", error: error.message }, { status: 500 });

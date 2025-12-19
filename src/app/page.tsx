@@ -26,6 +26,7 @@ interface Testimoni {
 interface WebContent {
   hero_judul: string;
   hero_deskripsi: string;
+  tentang_kami?: string;
 }
 
 // Data Keunggulan (Statis)
@@ -41,10 +42,13 @@ export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [testimonials, setTestimonials] = useState<Testimoni[]>([]);
   const [content, setContent] = useState<WebContent>({
-    hero_judul: 'Seni Cahaya & Karya Bakar',
-    hero_deskripsi: 'Menyulap limbah paralon menjadi mahakarya interior yang estetik, fungsional, dan bernilai seni tinggi.'
-  });
+  hero_judul: 'Seni Cahaya & Karya Bakar',
+  hero_deskripsi: 'Menyulap limbah paralon menjadi mahakarya interior yang estetik, fungsional, dan bernilai seni tinggi.',
+  tentang_kami: ''
+});
+
   const [isLoading, setIsLoading] = useState(true);
+  const [hoveredProductId, setHoveredProductId] = useState<number | null>(null);
 
   // --- REF UNTUK HORIZONTAL SCROLL ---
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -64,13 +68,12 @@ export default function Home() {
         const dataProduk = await resProduk.json();
         const dataTesti = await resTesti.json();
 
-        // 1. Set Konten Web
-        if (dataKonten.hero_judul) {
-          setContent({
-            hero_judul: dataKonten.hero_judul,
-            hero_deskripsi: dataKonten.hero_deskripsi
-          });
-        }
+        // 1. Set Konten Web (PERBAIKAN)
+        setContent({
+          hero_judul: dataKonten.hero_judul || content.hero_judul,
+          hero_deskripsi: dataKonten.hero_deskripsi || content.hero_deskripsi,
+          tentang_kami: dataKonten.tentang_kami || ''
+        });
 
         // 2. Set Produk (Ambil semua untuk scroll horizontal)
         if (Array.isArray(dataProduk)) {
@@ -139,11 +142,11 @@ export default function Home() {
 
           <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/katalog"
-              className="px-8 py-4 rounded-full font-bold text-white bg-gradient-to-br from-[#C87941] to-[#A55E2F] hover:scale-105 transition transform flex items-center justify-center gap-2 shadow-xl"
-            >
-              Jelajahi Katalog <ArrowRight size={20} />
-            </Link>
+            href="/katalog"
+            className="px-8 py-4 rounded-full font-bold text-white bg-gradient-to-br from-[#C87941] to-[#A55E2F] hover:scale-105 transition transform flex items-center justify-center shadow-xl"
+          >
+            Jelajahi Katalog
+          </Link>
 
             <Link
               href="/kontak"
@@ -180,6 +183,44 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {/* TENTANG KAMI */}
+      <section className="py-24 px-4 bg-[#F8F7F2]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          
+          {/* FOTO */}
+          <div className="relative">
+            <img
+              src="/tentang-kami.jpg"
+              alt="Tentang Ajo Art"
+              className="w-full h-[420px] object-cover rounded-3xl shadow-lg"
+              loading="lazy"
+              onError={(e) =>
+                (e.currentTarget.src =
+                  'https://images.unsplash.com/photo-1604147706283-d7119b5b822c?auto=format&fit=crop&q=80&w=1200')
+              }
+            />
+            <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
+          </div>
+
+          {/* TEKS */}
+          <div>
+            <h2 className="text-4xl font-serif font-bold text-[#4A403A] mb-6">
+              Tentang Kami
+            </h2>
+
+            <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-line">
+              {content.tentang_kami || 
+                'Informasi tentang kami belum tersedia. Silakan lengkapi melalui halaman Konten Website.'}
+            </p>
+
+            <div className="mt-8">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
 
       {/* 3. KOLEKSI TERBARU - HORIZONTAL SCROLL */}
       <section className="py-24 px-4">
@@ -233,8 +274,11 @@ export default function Home() {
                 products.map((product) => (
                   <div
                     key={product.id}
+                    onMouseEnter={() => setHoveredProductId(product.id)}
+                    onMouseLeave={() => setHoveredProductId(null)}
                     className="flex-shrink-0 w-80 group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl transition duration-300 border border-[#E6D5B8] transform hover:-translate-y-2"
                   >
+
                     {/* Card Image */}
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
                       <img
@@ -243,15 +287,13 @@ export default function Home() {
                         className="w-full h-full object-cover transform group-hover:scale-105 transition duration-700"
                         loading="lazy"
                       />
-                      
-                      {/* Rating Badge */}
-                      <div className="absolute top-3 right-3 bg-white/90 text-[#4A403A] px-3 py-1 rounded-full text-sm font-bold shadow flex items-center gap-1">
-                        <Star size={14} fill="#fbbf24" stroke="none" />
-                        {product.rating || 5.0}
-                      </div>
 
                       {/* Overlay dengan Link */}
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                      <div
+                        className={`absolute inset-0 bg-black/30 transition duration-300 flex items-center justify-center
+                          ${hoveredProductId === product.id ? 'opacity-100' : 'opacity-0'}`}
+                      >
+
                         <Link
                           href={`/katalog/${product.id}`}
                           className="bg-white text-[#4A403A] px-6 py-3 rounded-full font-bold hover:bg-[#C87941] hover:text-white transition transform hover:scale-105"
