@@ -15,20 +15,22 @@ function validateId(id: string) {
 // --- GET (Ambil 1 Produk) ---
 export async function GET(
   request: Request,
-  // Perubahan Next.js 15: params harus bertipe Promise
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Perubahan Next.js 15: Wajib await params
     const params = await props.params;
-    
     const productId = validateId(params.id);
+
     if (!productId) {
       return NextResponse.json({ message: "ID produk harus berupa angka." }, { status: 400 });
     }
 
-    const produk = await prisma.produk.findUnique({
-      where: { id: productId },
+    // UPDATE: Hanya ambil produk yang BELUM dihapus (deletedAt: null)
+    const produk = await prisma.produk.findFirst({
+      where: { 
+        id: productId,
+        deletedAt: null // <--- Filter agar produk sampah dianggap tidak ada
+      },
       include: { kategori: true },
     });
 
@@ -42,13 +44,14 @@ export async function GET(
   }
 }
 
-// --- DELETE (Hapus Produk) ---
+// --- DELETE (Pindah ke Sampah / Soft Delete) ---
+// Method ini dipanggil saat tombol "Hapus" (Merah) ditekan di halaman Admin
 export async function DELETE(
   request: Request,
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const params = await props.params; // <--- INI KUNCINYA
+    const params = await props.params;
     const productId = validateId(params.id);
     
     if (!productId) {
@@ -63,11 +66,14 @@ export async function DELETE(
       return NextResponse.json({ message: "Produk tidak ditemukan." }, { status: 404 });
     }
 
-    await prisma.produk.delete({
+    // --- PERUBAHAN UTAMA DISINI ---
+    // Jangan gunakan .delete(), tapi gunakan .update()
+    await prisma.produk.update({
       where: { id: productId },
+      data: { deletedAt: new Date() }, // Isi tanggal penghapusan (Soft Delete)
     });
 
-    return NextResponse.json({ message: "Produk berhasil dihapus." }, { status: 200 });
+    return NextResponse.json({ message: "Produk berhasil dipindahkan ke sampah." }, { status: 200 });
 
   } catch (error: any) {
     console.error("Error deleting produk:", error);
@@ -84,7 +90,7 @@ export async function PATCH(
   props: { params: Promise<{ id: string }> }
 ) {
   try {
-    const params = await props.params; // <--- INI KUNCINYA
+    const params = await props.params;
     const productId = validateId(params.id);
     
     if (!productId) {

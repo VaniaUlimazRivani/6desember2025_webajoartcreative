@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Award, ShieldCheck, Flame, Truck, ArrowRight, ChevronLeft, ChevronRight, Loader2, Star } from 'lucide-react';
 import Navbar from '@/components/ui/Navbar';
+import ScrollReveal from '@/components/ui/ScrollReveal';
+
 
 // --- INTERFACES ---
 interface Product {
@@ -167,10 +169,10 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {keunggulan.map((item, idx) => {
-            const Icon = item.icon;
-            return (
+          const Icon = item.icon;
+          return (
+            <ScrollReveal key={idx} delay={idx * 0.15}>
               <div
-                key={idx}
                 className="p-6 border border-gray-700 rounded-2xl hover:border-[#C87941] transition duration-300 group bg-[#3E3530] hover:bg-[#352d29]"
               >
                 <div className="mb-4 inline-block p-3 rounded-full bg-[#2D2420] group-hover:bg-[#C87941] transition duration-300">
@@ -179,45 +181,46 @@ export default function Home() {
                 <h3 className="text-lg font-bold mb-2 text-[#FDFCF5]">{item.title}</h3>
                 <p className="text-gray-300 text-sm leading-relaxed">{item.desc}</p>
               </div>
-            );
-          })}
+            </ScrollReveal>
+          );
+        })}
+
         </div>
       </section>
 
       {/* TENTANG KAMI */}
       <section className="py-24 px-4 bg-[#F8F7F2]">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
           {/* FOTO */}
-          <div className="relative">
-            <img
-              src="/tentang-kami.jpg"
-              alt="Tentang Ajo Art"
-              className="w-full h-[420px] object-cover rounded-3xl shadow-lg"
-              loading="lazy"
-              onError={(e) =>
-                (e.currentTarget.src =
-                  'https://images.unsplash.com/photo-1604147706283-d7119b5b822c?auto=format&fit=crop&q=80&w=1200')
-              }
-            />
-            <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
-          </div>
+          <ScrollReveal>
+            <div className="relative">
+              <img
+                src="/tentang-kami.jpg"
+                alt="Tentang Ajo Art"
+                className="w-full h-[420px] object-cover rounded-3xl shadow-lg"
+                loading="lazy"
+                onError={(e) =>
+                  (e.currentTarget.src =
+                    'https://images.unsplash.com/photo-1604147706283-d7119b5b822c?auto=format&fit=crop&q=80&w=1200')
+                }
+              />
+              <div className="absolute inset-0 rounded-3xl ring-1 ring-black/5" />
+            </div>
+          </ScrollReveal>
 
           {/* TEKS */}
-          <div>
-            <h2 className="text-4xl font-serif font-bold text-[#4A403A] mb-6">
-              Tentang Kami
-            </h2>
+          <ScrollReveal delay={0.2}>
+            <div>
+              <h2 className="text-4xl font-serif font-bold text-[#4A403A] mb-6">
+                Tentang Kami
+              </h2>
 
-            <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-line">
-              {content.tentang_kami || 
-                'Informasi tentang kami belum tersedia. Silakan lengkapi melalui halaman Konten Website.'}
-            </p>
-
-            <div className="mt-8">
+              <p className="text-gray-600 leading-relaxed text-lg whitespace-pre-line">
+                {content.tentang_kami || 
+                  'Informasi tentang kami belum tersedia. Silakan lengkapi melalui halaman Konten Website.'}
+              </p>
             </div>
-          </div>
-
+          </ScrollReveal>
         </div>
       </section>
 
@@ -238,7 +241,8 @@ export default function Home() {
           </div>
 
           {/* Horizontal Scroll Container */}
-          <div className="relative group">
+          <ScrollReveal>
+            <div className="relative group">
             
             {/* Left Button */}
             <button
@@ -335,6 +339,7 @@ export default function Home() {
             </button>
 
           </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -346,18 +351,18 @@ export default function Home() {
             {isLoading ? (
               <div className="col-span-3 text-center py-20 text-gray-400 animate-pulse">Memuat testimoni...</div>
             ) : testimonials.length > 0 ? (
-              testimonials.map((testi) => (
+              testimonials.map((testi, i) => (
+              <ScrollReveal key={testi.id} delay={i * 0.2}>
                 <blockquote 
-                  key={testi.id} 
                   className="bg-white p-8 rounded-2xl shadow-sm border border-[#E6D5B8] relative hover:-translate-y-2 transition duration-300 h-full flex flex-col justify-between"
                 >
                   {/* Rating Stars */}
                   <div className="flex gap-1 mb-4">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(5)].map((_, idx) => (
                       <Star 
-                        key={i} 
+                        key={idx} 
                         size={16} 
-                        className={i < testi.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                        className={idx < testi.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
                       />
                     ))}
                   </div>
@@ -373,7 +378,9 @@ export default function Home() {
                     </p>
                   </div>
                 </blockquote>
-              ))
+              </ScrollReveal>
+            ))
+
             ) : (
               <div className="col-span-3 text-center text-gray-400 italic py-20">
                 Belum ada ulasan yang ditampilkan.
@@ -384,44 +391,49 @@ export default function Home() {
       </section>
 
       {/* 5. FAQ SECTION (STATIS) */}
-      <section className="py-24 px-4 bg-[#E6D5B8]">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-center text-3xl md:text-4xl font-serif font-bold mb-12 text-[#4A403A]">Pertanyaan Umum</h2>
-          <div className="space-y-4">
-            {[
-              { 
-                q: "Apakah produk ini tahan lama?", 
-                a: "Sangat tahan lama. Kami menggunakan bahan PVC tebal yang anti pecah, anti rayap, dan tahan air." 
-              },
-              { 
-                q: "Bagaimana cara membersihkannya?", 
-                a: "Cukup dilap dengan kain lembab. Jangan menggunakan cairan kimia keras agar lapisan pernis tetap awet." 
-              },
-              { 
-                q: "Apakah bisa kirim ke luar kota?", 
-                a: "Ya, kami melayani pengiriman ke seluruh Indonesia dengan packing kayu aman." 
-              },
-              { 
-                q: "Berapa lama proses pembuatan custom?", 
-                a: "Tergantung kerumitan, biasanya memakan waktu 3-7 hari kerja." 
-              },
-            ].map((item, i) => (
-              <details 
-                key={i} 
-                className="group bg-white rounded-xl border border-[#D4C4B0] hover:border-[#C87941] transition cursor-pointer shadow-sm overflow-hidden"
-              >
-                <summary className="p-5 font-bold text-[#4A403A] flex items-center justify-between hover:bg-gray-50 transition">
-                  {item.q}
-                  <span className="text-[#C87941] group-open:rotate-180 transition duration-300">▼</span>
-                </summary>
-                <div className="px-5 pb-5 text-gray-600 border-t border-gray-100 bg-gray-50">
-                  {item.a}
-                </div>
-              </details>
-            ))}
+      <ScrollReveal>
+        <section className="py-24 px-4 bg-[#E6D5B8]">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-center text-3xl md:text-4xl font-serif font-bold mb-12 text-[#4A403A]">
+              Pertanyaan Umum
+            </h2>
+
+            <div className="space-y-4">
+              {[
+                { 
+                  q: "Apakah produk ini tahan lama?", 
+                  a: "Sangat tahan lama. Kami menggunakan bahan PVC tebal yang anti pecah, anti rayap, dan tahan air." 
+                },
+                { 
+                  q: "Bagaimana cara membersihkannya?", 
+                  a: "Cukup dilap dengan kain lembab. Jangan menggunakan cairan kimia keras agar lapisan pernis tetap awet." 
+                },
+                { 
+                  q: "Apakah bisa kirim ke luar kota?", 
+                  a: "Ya, kami melayani pengiriman ke seluruh Indonesia dengan packing kayu aman." 
+                },
+                { 
+                  q: "Berapa lama proses pembuatan custom?", 
+                  a: "Tergantung kerumitan, biasanya memakan waktu 3-7 hari kerja." 
+                },
+              ].map((item, i) => (
+                <details 
+                  key={i} 
+                  className="group bg-white rounded-xl border border-[#D4C4B0] hover:border-[#C87941] transition cursor-pointer shadow-sm overflow-hidden"
+                >
+                  <summary className="p-5 font-bold text-[#4A403A] flex items-center justify-between hover:bg-gray-50 transition">
+                    {item.q}
+                    <span className="text-[#C87941] group-open:rotate-180 transition duration-300">▼</span>
+                  </summary>
+                  <div className="px-5 pb-5 text-gray-600 border-t border-gray-100 bg-gray-50">
+                    {item.a}
+                  </div>
+                </details>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </ScrollReveal>
 
     </div>
   );

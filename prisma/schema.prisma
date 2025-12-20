@@ -30,17 +30,19 @@ model Kategori {
 
 // Tabel Produk
 model Produk {
-  id            Int             @id @default(autoincrement())
-  nama          String
-  harga         Float
-  stok          Int             // Wajib diisi saat POST
-  deskripsi     String?         @db.Text
-  gambar        String?
-  kategoriId    Int             // Wajib, harus ada ID kategori yang valid
-  kategori      Kategori        @relation(fields: [kategoriId], references: [id])
+  id              Int             @id @default(autoincrement())
+  nama            String
+  harga           Float
+  stok            Int             // Wajib diisi saat POST
+  deskripsi       String?         @db.Text
+  gambar          String?
+  kategoriId      Int             // Wajib, harus ada ID kategori yang valid
+  kategori        Kategori        @relation(fields: [kategoriId], references: [id])
   transaksiItems  TransaksiItem[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  deletedAt       DateTime?       // <--- TAMBAHKAN DI SINI
 }
 
 // Tabel Testimoni

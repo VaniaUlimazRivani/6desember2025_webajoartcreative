@@ -3,10 +3,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// --- HANDLER GET (Ambil Semua Produk) ---
+// --- HANDLER GET (Ambil Semua Produk AKTIF) ---
 export async function GET() {
   try {
     const produk = await prisma.produk.findMany({
+      where: {
+        deletedAt: null, // <--- PERUBAHAN PENTING: Hanya ambil yang belum dihapus
+      },
       include: {
         kategori: true, // Sertakan data kategori (relasi)
       },
@@ -48,6 +51,7 @@ export async function POST(request: Request) {
         kategoriId: Number(kategoriId), // Konversi ke angka
         deskripsi: deskripsi || null, 
         gambar: gambar || null,    // Ini menerima string URL (contoh: "/uploads/foto.jpg")
+        deletedAt: null,           // Pastikan produk baru statusnya aktif (bukan sampah)
       },
     });
 
