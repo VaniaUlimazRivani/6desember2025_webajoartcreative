@@ -41,8 +41,8 @@ model Produk {
   transaksiItems  TransaksiItem[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-
   deletedAt       DateTime?       // <--- TAMBAHKAN DI SINI
+  penjualan       Penjualan[]
 }
 
 // Tabel Testimoni
@@ -84,4 +84,14 @@ model KontenWebsite {
   key   String @unique
   value String @db.Text
   label String?
+}
+
+model Penjualan {
+  id          Int      @id @default(autoincrement())
+  produkId    Int
+  produk      Produk   @relation(fields: [produkId], references: [id])
+  jumlah      Int
+  hargaSatuan Float
+  total       Float
+  tanggal     DateTime @default(now())
 }
